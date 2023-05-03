@@ -154,16 +154,16 @@ if __name__ == "__main__":
             header = f.readline()
         if (
             header
-            != "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+            != "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
         ):
             raise ValueError("Output file exists but has incorrect header")
     else:
         with open(args.output_file, "w") as f:
             f.write(
-                "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+                "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
             )
 
     with open(args.output_file, "a") as f:
         f.write(
-            f"{torch.__version__},{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cuda},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
+            f"{torch.__version__},{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cpu},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
         )
