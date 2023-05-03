@@ -61,6 +61,11 @@ def get_parser():
         action="store_true",
         help="Use half precision.",
     )
+    parser.add_argument(
+        "--run-generate",
+        action="store_true",
+        help="Run the benchmarks using `generate` method.",
+    )
     return parser
 
 
@@ -94,11 +99,14 @@ if __name__ == "__main__":
         dtype=torch.long,
         device=model.device,
     )
-    generation_config = GenerationConfig(
-        max_new_tokens=args.max_num_tokens,
-        pad_token_id=tokenizer.pad_token_id,
-        # TODO: add more args
-    )
+    if args.run_generate:
+        generation_config = GenerationConfig(
+            max_new_tokens=args.max_num_tokens,
+            pad_token_id=tokenizer.pad_token_id,
+            # TODO: add more args
+        )
+    else:
+        generation_config = None
 
     # warmup
     _ = timing_cuda(
@@ -144,16 +152,16 @@ if __name__ == "__main__":
             header = f.readline()
         if (
             header
-            != "model_name,compile_mode,num_runs,batch_size,max_num_tokens,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+            != "model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
         ):
             raise ValueError("Output file exists but has incorrect header")
     else:
         with open(args.output_file, "w") as f:
             f.write(
-                "model_name,compile_mode,num_runs,batch_size,max_num_tokens,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+                "model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
             )
 
     with open(args.output_file, "a") as f:
         f.write(
-            f"{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.use_cuda},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
+            f"{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cuda},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
         )
