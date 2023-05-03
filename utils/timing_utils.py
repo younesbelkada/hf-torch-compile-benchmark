@@ -11,6 +11,7 @@ def timing_cuda(
     attention_masks: torch.FloatTensor = None,
     generation_config: "GenerationConfig" = None,
     device: torch.device = torch.device("cpu"),
+    forward_only: bool = False,
 ) -> Tuple[float, int]:
     if attention_masks is None:
         attention_masks = torch.ones_like(input_ids)
@@ -24,11 +25,14 @@ def timing_cuda(
 
     start_event.record()
     for _ in tqdm(range(num_runs)):
-        _ = model.generate(
-            input_ids,
-            attention_mask=attention_masks,
-            generation_config=generation_config,
-        )
+        if forward_only:
+            _ = model(input_ids, attention_mask=attention_masks)
+        else:
+            _ = model.generate(
+                input_ids,
+                attention_mask=attention_masks,
+                generation_config=generation_config,
+            )
 
     end_event.record()
     torch.cuda.synchronize()
