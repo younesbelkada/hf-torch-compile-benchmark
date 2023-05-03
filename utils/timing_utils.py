@@ -12,8 +12,21 @@ def timing_cuda(
     generation_config: "GenerationConfig" = None,
     device: torch.device = torch.device("cpu"),
 ) -> Tuple[float, int]:
+    
     if attention_masks is None:
         attention_masks = torch.ones_like(input_ids)
+
+    if getattr(model.config, "is_encoder_decoder", False):
+        inputs = {
+            "input_ids": input_ids,
+            "attention_mask": attention_masks,
+            "decoder_input_ids": input_ids if generation_config is None else None,
+        }
+    else:
+        inputs = {
+            "input_ids": input_ids, 
+            "attention_mask": attention_masks,
+        }
 
     start_event = torch.cuda.Event(enable_timing=True)
     end_event = torch.cuda.Event(enable_timing=True)
@@ -23,12 +36,12 @@ def timing_cuda(
     torch.cuda.synchronize()
 
     start_event.record()
+
     for _ in tqdm(range(num_runs)):
-        _ = model.generate(
-            input_ids,
-            attention_mask=attention_masks,
-            generation_config=generation_config,
-        )
+        if generation_config is not None:
+            _ = model.generate(**inputs, generation_config=generation_config)
+        else:
+            _ = model(**inputs)
 
     end_event.record()
     torch.cuda.synchronize()
