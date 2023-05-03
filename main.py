@@ -117,7 +117,6 @@ if __name__ == "__main__":
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
-        forward_only=args.forward_only,
     )
 
     # real timing
@@ -127,7 +126,6 @@ if __name__ == "__main__":
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
-        forward_only=args.forward_only,
     )
 
     model = model.to_bettertransformer()
@@ -140,7 +138,6 @@ if __name__ == "__main__":
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
-        forward_only=args.forward_only,
     )
 
     # real timing
@@ -150,7 +147,6 @@ if __name__ == "__main__":
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
-        forward_only=args.forward_only,
     )
 
     if os.path.isfile(args.output_file):
@@ -168,7 +164,6 @@ if __name__ == "__main__":
             )
 
     with open(args.output_file, "a") as f:
-        mode = "forward" if args.forward_only else "generate"
         f.write(
             f"{torch.__version__},{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cuda},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
         )

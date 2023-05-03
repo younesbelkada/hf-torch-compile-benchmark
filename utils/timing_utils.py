@@ -11,7 +11,6 @@ def timing_cuda(
     attention_masks: torch.FloatTensor = None,
     generation_config: "GenerationConfig" = None,
     device: torch.device = torch.device("cpu"),
-    forward_only: bool = False,
 ) -> Tuple[float, int]:
     
     if attention_masks is None:
