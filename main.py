@@ -18,13 +18,13 @@ def get_parser():
     parser.add_argument(
         "--num-runs",
         type=int,
-        default=50,
+        default=10,
         help="Number of batches to run. The average time across these runs will be reported. Larger runs might give a better estimate of the average time, but it will take longer to run.",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=64,
+        default=1,
         help="Input batch size.",
     )
     parser.add_argument(
@@ -52,7 +52,7 @@ def get_parser():
         help="The output file to write results. If the file does not exist, it will be created. If the file exists, the results will be appended to the file.",
     )
     parser.add_argument(
-        "--use-cuda",
+        "--use_cpu",
         action="store_true",
         help="Use CUDA if available.",
     )
@@ -85,7 +85,9 @@ if __name__ == "__main__":
             torch_dtype=torch.float16 if args.use_half else torch.float32,
         )
 
-    if args.use_cuda:
+    if args.use_cpu:
+        model = model.to("cpu")
+    else:
         model = model.to("cuda")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     # warmup
     _ = timing_cuda(
         model=model,
-        num_runs=1,
+        num_runs=2,
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     # warmup
     _ = timing_cuda(
         model=model,
-        num_runs=1,
+        num_runs=2,
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
@@ -152,16 +154,16 @@ if __name__ == "__main__":
             header = f.readline()
         if (
             header
-            != "model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+            != "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
         ):
             raise ValueError("Output file exists but has incorrect header")
     else:
         with open(args.output_file, "w") as f:
             f.write(
-                "model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cuda,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
+                "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
             )
 
     with open(args.output_file, "a") as f:
         f.write(
-            f"{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cuda},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
+            f"{torch.__version__},{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cpu},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
         )
