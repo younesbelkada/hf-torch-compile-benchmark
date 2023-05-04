@@ -2,10 +2,9 @@ import os
 import argparse
 
 import torch
+import transformers
 from transformers import (
     AutoTokenizer,
-    AutoModelForCausalLM,
-    AutoModelForSeq2SeqLM,
     AutoConfig,
     GenerationConfig,
 )
@@ -75,37 +74,38 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model_config = AutoConfig.from_pretrained(args.model_name)
-    if getattr(model_config, "is_encoder_decoder", False):
-        model = AutoModelForSeq2SeqLM.from_pretrained(
-            args.model_name,
-            torch_dtype=eval(args.precision)
-        )
-    else:
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_name,
-            torch_dtype=eval(args.precision)
-        )
+    model_cls = getattr(transformers, model_config.architectures[0])
+
+    model = model_cls.from_pretrained(
+        args.model_name,
+        torch_dtype=eval(args.precision)
+    )
 
     if args.use_cpu:
         model = model.to("cpu")
     else:
         model = model.to("cuda")
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    if getattr(tokenizer, "pad_token_id", None) is None:
-        tokenizer.pad_token_id = tokenizer.eos_token_id
+    shape = (args.batch_size, args.max_num_tokens)
+    dtype = torch.long
 
-    input_ids = torch.randint(
+    if model.config.model_type == "whisper":
+        args.max_num_tokens = 2 * model.config.max_source_positions
+        shape = (args.batch_size, model.config.num_mel_bins, args.max_num_tokens)
+        dtype = eval(args.precision)
+
+    inputs = torch.randint(
         0,
         model.config.vocab_size,
-        (args.batch_size, args.max_num_tokens),
-        dtype=torch.long,
+        shape,
+        dtype=dtype,
         device=model.device,
     )
     if args.run_generate:
         generation_config = GenerationConfig(
             max_new_tokens=args.max_num_tokens,
-            pad_token_id=tokenizer.pad_token_id,
+            pad_token_id=0,
+            eos_token_id=None
             # TODO: add more args
         )
     else:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     _ = timing_cuda(
         model=model,
         num_runs=4,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     hf_time, hf_max_memory = timing_cuda(
         model=model,
         num_runs=args.num_runs,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     _ = timing_cuda(
         model=model,
         num_runs=4,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     sdpa_no_compile_time, no_compile_max_memory = timing_cuda(
         model=model,
         num_runs=args.num_runs,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     _ = timing_cuda(
         model=model,
         num_runs=4,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     sdpa_compile_time, compile_max_memory = timing_cuda(
         model=model,
         num_runs=args.num_runs,
-        input_ids=input_ids,
+        inputs=inputs,
         generation_config=generation_config,
         device=model.device,
     )
@@ -181,7 +181,7 @@ if __name__ == "__main__":
             f.write(full_header)
 
     with open(args.output_file, "a") as f:
-        max_tokens = args.max_num_tokens if args.run_generate else "NaN"
+        max_tokens = args.max_num_tokens
         run_type = "forward-only" if not args.run_generate else "generate"
         precision = str(model.dtype)
 
