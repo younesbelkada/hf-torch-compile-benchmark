@@ -57,9 +57,10 @@ def get_parser():
         help="Use CUDA if available.",
     )
     parser.add_argument(
-        "--use-half",
-        action="store_true",
-        help="Use half precision.",
+        "--precision",
+        type=str,
+        default="torch.float32",
+        help="Precision of torch dtype"
     )
     parser.add_argument(
         "--run-generate",
@@ -77,12 +78,12 @@ if __name__ == "__main__":
     if getattr(model_config, "is_encoder_decoder", False):
         model = AutoModelForSeq2SeqLM.from_pretrained(
             args.model_name,
-            torch_dtype=torch.float16 if args.use_half else torch.float32,
+            torch_dtype=eval(args.precision)
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
             args.model_name,
-            torch_dtype=torch.float16 if args.use_half else torch.float32,
+            torch_dtype=eval(args.precision)
         )
 
     if args.use_cpu:
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     # warmup
     _ = timing_cuda(
         model=model,
-        num_runs=2,
+        num_runs=4,
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
@@ -129,19 +130,18 @@ if __name__ == "__main__":
     )
 
     model = model.to_bettertransformer()
-    model = torch.compile(model, mode=args.compile_mode, fullgraph=True)
 
     # warmup
     _ = timing_cuda(
         model=model,
-        num_runs=2,
+        num_runs=4,
         input_ids=input_ids,
         generation_config=generation_config,
         device=model.device,
     )
 
     # real timing
-    compile_time, compile_max_memory = timing_cuda(
+    sdpa_no_compile_time, no_compile_max_memory = timing_cuda(
         model=model,
         num_runs=args.num_runs,
         input_ids=input_ids,
@@ -149,21 +149,42 @@ if __name__ == "__main__":
         device=model.device,
     )
 
+    model = torch.compile(model, mode=args.compile_mode, fullgraph=True)
+
+    # warmup
+    _ = timing_cuda(
+        model=model,
+        num_runs=4,
+        input_ids=input_ids,
+        generation_config=generation_config,
+        device=model.device,
+    )
+
+    # real time
+    sdpa_compile_time, compile_max_memory = timing_cuda(
+        model=model,
+        num_runs=args.num_runs,
+        input_ids=input_ids,
+        generation_config=generation_config,
+        device=model.device,
+    )
+
+    full_header = "pt_version,model_name,compile_mode,batch_size,max_num_tokens,run_type,precision,hf_time,sdpa_no_compile_time,sdpa_compile_time\n"
+
     if os.path.isfile(args.output_file):
         with open(args.output_file, "r") as f:
             header = f.readline()
-        if (
-            header
-            != "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
-        ):
+        if header != full_header:
             raise ValueError("Output file exists but has incorrect header")
     else:
         with open(args.output_file, "w") as f:
-            f.write(
-                "pt_version,model_name,compile_mode,num_runs,batch_size,max_num_tokens,run_generate,use_cpu,use_half,hf_time,hf_max_memory,compile_time,compile_max_memory\n"
-            )
+            f.write(full_header)
 
     with open(args.output_file, "a") as f:
+        max_tokens = args.max_num_tokens if args.run_generate else "NaN"
+        run_type = "forward-only" if not args.run_generate else "generate"
+        precision = str(model.dtype)
+
         f.write(
-            f"{torch.__version__},{args.model_name},{args.compile_mode},{args.num_runs},{args.batch_size},{args.max_num_tokens},{args.run_generate},{args.use_cpu},{args.use_half},{hf_time},{hf_max_memory},{compile_time},{compile_max_memory}\n"
+                f"{torch.__version__},{args.model_name},{args.compile_mode},{args.batch_size},{max_tokens},{run_type},{precision},{round(hf_time, 5)},{round(sdpa_no_compile_time, 5)},{round(sdpa_compile_time, 5)}\n"
         )
