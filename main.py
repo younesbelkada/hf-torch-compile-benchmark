@@ -105,7 +105,9 @@ if __name__ == "__main__":
         generation_config = GenerationConfig(
             max_new_tokens=args.max_num_tokens,
             pad_token_id=0,
-            eos_token_id=None
+            eos_token_id=None,
+            do_sample=False,
+            num_beams=1,
             # TODO: add more args
         )
     else:

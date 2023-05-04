@@ -1,9 +1,0 @@
-pt_version,model_name,compile_mode,batch_size,max_num_tokens,run_type,precision,hf_time,sdpa_no_compile_time,sdpa_compile_time
-2.0.0+cu118,gpt2,reduce-overhead,1,256,forward-only,torch.float16,0.00409,0.00286,0.00126
-2.0.0+cu118,gpt2,reduce-overhead,1,256,forward-only,torch.float32,0.00437,0.00327,0.00285
-2.0.0+cu118,t5-base,reduce-overhead,1,256,forward-only,torch.float16,0.01125,0.01141,0.00588
-2.0.0+cu118,t5-base,reduce-overhead,8,256,forward-only,torch.float16,0.02179,0.02021,0.01635
-2.0.0+cu118,t5-base,reduce-overhead,32,256,forward-only,torch.float16,0.09653,0.07943,0.06823
-2.0.0+cu118,t5-base,reduce-overhead,1,256,forward-only,torch.float32,0.01471,0.01103,0.00921
-2.0.0+cu118,gpt2,reduce-overhead,1,256,forward-only,torch.float16,0.0039,0.00271,0.00126
-2.0.0+cu118,t5-base,reduce-overhead,1,256,forward-only,torch.float16,0.01108,0.01102,0.00588
