@@ -24,7 +24,7 @@ def timing_cuda(
         if generation_config is not None:
             _ = model.generate(inputs, generation_config=generation_config)
         else:
-            kwargs = {}
+            kwargs = {"attention_mask": torch.ones_like(inputs, dtype=torch.bool)}
             if model.config.is_encoder_decoder:
                 shape = inputs.shape
                 if model.config.model_type == "whisper":
