@@ -78,7 +78,8 @@ if __name__ == "__main__":
 
     model = model_cls.from_pretrained(
         args.model_name,
-        torch_dtype=eval(args.precision)
+        torch_dtype=eval(args.precision),
+        low_cpu_mem_usage=True
     )
 
     if args.use_cpu:
