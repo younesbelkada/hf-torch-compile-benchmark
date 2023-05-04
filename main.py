@@ -108,6 +108,7 @@ if __name__ == "__main__":
             eos_token_id=None,
             do_sample=False,
             num_beams=1,
+            use_cache=True,
             # TODO: add more args
         )
     else:
