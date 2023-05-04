@@ -1,0 +1,15 @@
+pt_version,model_name,compile_mode,batch_size,max_num_tokens,run_type,precision,hf_time,sdpa_no_compile_time,sdpa_compile_time
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,1,256,forward-only,torch.float16,0.00426,0.003,0.05625
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,8,256,forward-only,torch.float16,0.00838,0.00842,0.06906
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,32,256,forward-only,torch.float16,0.03402,0.03188,0.09866
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,1,256,forward-only,torch.float32,0.00463,0.00345,0.05444
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,8,256,forward-only,torch.float32,0.01917,0.01945,0.10395
+2.1.0.dev20230504+cu118,gpt2,reduce-overhead,32,256,forward-only,torch.float32,0.08936,0.08605,0.13856
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,1,256,forward-only,torch.float16,0.01189,0.0121,0.00609
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,8,256,forward-only,torch.float16,0.02182,0.0203,0.01801
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,32,256,forward-only,torch.float16,0.09746,0.08032,0.08354
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,1,256,forward-only,torch.float32,0.01053,0.01124,0.00929
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,8,256,forward-only,torch.float32,0.03523,0.03615,0.03444
+2.1.0.dev20230504+cu118,t5-base,reduce-overhead,32,256,forward-only,torch.float32,0.13752,0.1446,0.12911
+2.1.0.dev20230504+cu118,huggyllama/llama-7b,reduce-overhead,1,256,forward-only,torch.float16,0.04381,0.02948,0.23042
+2.1.0.dev20230504+cu118,EleutherAI/gpt-j-6b,reduce-overhead,1,256,forward-only,torch.float16,0.02678,0.0247,0.19665
