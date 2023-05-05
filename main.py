@@ -153,7 +153,7 @@ if __name__ == "__main__":
         device=model.device,
     )
 
-    model = torch.compile(model, mode=args.compile_mode, fullgraph=True)
+    model = torch.compile(model, mode=args.compile_mode, fullgraph=True, dynamic=True)
 
     # warmup
     _ = timing_cuda(
